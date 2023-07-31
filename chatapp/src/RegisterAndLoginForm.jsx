@@ -8,7 +8,7 @@ export const RegisterAndLoginForm = () => {
   const [password, setPassword] = useState("");
 
   const { setUsername: setLoggedInUsername, setId } = useContext(UserContext);
-  const [islogin, setIslogin] = useState("Register");
+  const [islogin, setIslogin] = useState("Login");
 
 
   async function handleSubmit(ev) {

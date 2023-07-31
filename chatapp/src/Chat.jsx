@@ -42,13 +42,15 @@ export const Chat = () => {
   }
   const messageWithoutDupes = uniqBy(messages, "_id");
   //send msg
-  function sendMsg(ev) {
-    ev.preventDefault();
+  function sendMsg(ev,file = null) {
+    if (ev)
+      ev.preventDefault();
     ws.send(
       JSON.stringify({
         message: {
           recipient: selectUserid,
           text: textmsg,
+          file,
         },
       })
     );
@@ -57,7 +59,24 @@ export const Chat = () => {
       ...prev,
       { text: textmsg, sender: id, recipient: selectUserid,_id:Date.now() },
     ]);
+    if (file) {
+      axios.get('/messages/' + selectUserid).then(res => {
+        setMessages(res.data);
+      })
+    }
       
+  }
+
+  //file 
+  function uploadFile(ev){
+    const reader = new FileReader();
+    reader.readAsDataURL(ev.target.files[0]);
+    reader.onload = () => {
+      sendMsg(null, {
+        name: ev.target.files[0].name,
+        data: reader.result
+      });
+    }
   }
 
   useEffect(() => {
@@ -113,7 +132,7 @@ export const Chat = () => {
     //chat ui
 
     <div className="flex h-screen">
-      <div className="w-1/3 bg-white relative">
+      <div className="relative w-1/3 bg-white">
         <div>
         <Logo />
         <span>WelCome {username}</span>
@@ -134,8 +153,8 @@ export const Chat = () => {
           }
         })}
       </div>
-        <div className=" absolute flex w-full justify-center bottom-0 p-2 mx-auto ">
-          <button onClick={logout} className="bg-blue-100 border text-black p-2 rounded-sm shadow-sm hover:bg-black hover:text-white transition-all " >Logout</button>
+        <div className="absolute bottom-0 flex justify-center w-full p-2 mx-auto ">
+          <button onClick={logout} className="p-2 text-black transition-all bg-blue-100 border rounded-sm shadow-sm hover:bg-black hover:text-white " >Logout</button>
         </div>
       </div>
       {/* //chatbarrr */}
@@ -169,6 +188,14 @@ export const Chat = () => {
                     ? "ME: "
                     : onlinepeople[selectUserid] + ": "}
                   {message.text}
+                  {
+                    message.file && (
+                      <div>
+                        <a className="bg-blue-100 " target="_blank" href={axios.defaults.baseURL +'/uploads/'+ message.file}>{message.file}</a>
+                      </div>
+                    )
+                  }
+                  
                 </div>
               </div>
             ))}
@@ -187,6 +214,14 @@ export const Chat = () => {
               placeholder="Type Your Message "
               className="flex-grow p-2 bg-white border rounded-sm"
             />
+            <label type="button" className="p-2 text-black bg-gray-200 border border-gray-200 rounded-sm cursor-pointer">
+              <input type="file" className="hidden " onChange={uploadFile}></input>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+  <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+</svg>
+
+            </label>
+
             <button
               type="submit"
               className="p-2 text-white bg-blue-500 rounded-sm"

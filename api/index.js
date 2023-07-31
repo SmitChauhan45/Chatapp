@@ -8,6 +8,7 @@ const cookieparser = require('cookie-parser');
 const bcrypt = require('bcrypt');
 const ws = require('ws');
 const Message = require('./models/Message');
+const fs = require('fs');
 
 const bcryptSalt = bcrypt.genSaltSync(10);
 const app = express();
@@ -21,6 +22,7 @@ app.use(
 //middleware
 app.use(express.json())
 app.use(cookieparser())
+app.use('/uploads', express.static(__dirname + '/uploads'));
 mongoose.connect(process.env.mongoUrl);
 // console.log(process.env.mongoUrl);
 
@@ -215,18 +217,32 @@ connection.timer = setInterval(() => {
   connection.on('message', async (message) => {
 
     const messageData = JSON.parse(message.toString())
-    const { recipient, text } = messageData.message;
-
-    if (recipient && text) {
+    const { recipient, text, file } = messageData.message;
+    let filename = null;
+    if (file) {
+      console.log(file.data)
+      const parts = file.name.split('.');
+      const ext = parts[parts.length - 1];
+      filename = Date.now() + '.' + ext;
+      const path = __dirname+'/uploads/'+filename
+      const bufferData = new Buffer.from(file.data.split(',')[1], 'base64');
+      console.log(path);
+      fs.writeFile(path, bufferData, () => {
+        console.log("saved ")
+      })
+    }
+      
+    if (recipient && (text || file)) {
 
       const messageDoc = await Message.create({
         sender: connection.userId,
         recipient,
         text,
+        file:filename || null,
       });
       [...wss.clients]
         .filter(c => c.userId === recipient)
-        .forEach(c => c.send(JSON.stringify({ text, sender: connection.userId, _id: messageDoc._id, recipient })));
+        .forEach(c => c.send(JSON.stringify({ text, sender: connection.userId, _id: messageDoc._id, recipient,file:file?filename:null })));
     }
   });
   notifyAboutOnlinePeople();
