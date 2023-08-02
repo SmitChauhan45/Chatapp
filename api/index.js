@@ -248,4 +248,3 @@ connection.timer = setInterval(() => {
   notifyAboutOnlinePeople();
   
 })
-// mongodb+srv://piyushgediya112:<password>@cluster0.rte0xqx.mongodb.net/?retryWrites=true&w=majority
