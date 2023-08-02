@@ -158,7 +158,7 @@ app.post("/register", async (req, res) => {
     });
   }
 });
-// lGbtwb62Ly3d7rqq
+
 
 const server = app.listen(4000, () => {
   console.log("amaru server")
